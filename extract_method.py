@@ -18,16 +18,16 @@ class Ccf:
         read csv file
         :return:
         """
-        with open(r'.\Test_Data.csv', encoding='utf-8-sig') as f:
+        with open(r'.\Train_Data.csv', encoding='utf-8-sig') as f:
             file_content = pd.read_csv(f)
         ids = file_content[:40]['id']
         text = file_content[:40]['text']
         title = file_content[:40]['title']
-        # unknown_entities = file_content[:40]['unknownEntities']
+        unknown_entities = file_content[:40]['unknownEntities']
 
         content = []
         for i in range(len(ids)):
-            content.append([ids[i], title[i], text[i]])
+            content.append([ids[i], title[i], text[i], unknown_entities[i]])
         return content
 
     def get_stop_word(self):
@@ -43,6 +43,7 @@ class Ccf:
         replace_character = ['?', '#', '【', '】', '&nbsp', '▽', '\u3000\u3000', '@']
 
         for i in content:
+            # print(f"{content.index(i)}")
             for re_c in replace_character:
                 i[2] = i[2].replace(re_c, '')
             for x in range(20):
@@ -130,6 +131,7 @@ class Ccf:
 
             # ------------------------------------合并一次名词---------------------------------------------
             index_n = 0
+            # print(f"{content.index(i)}, {middle}")
             for a in range(len(middle)):
                 if middle[a][1] == 'n' and middle[a - 1][1] == 'n' and middle[a + 1][1] != 'n' and a < len(middle) - 1:
                     index_n = index_n + 1
@@ -155,6 +157,7 @@ class Ccf:
             if not op_tr:
                 op_or = re.compile(r'[http|https]+://\w+\.\w+/[a-zA-Z0-9]+', re.S).findall(i[2])  # 一个点的一个反斜杠
             book_name = list(set(re.compile(r'《\w+》', re.S).findall(i[2])))
+            result_pre = re.compile(r"[\d|\d.\d]+\b%", re.S).findall(i[2])
 
             # -------------------------------------添加实体------------------------------------------------
             for word in middle:
@@ -164,7 +167,8 @@ class Ccf:
             # ------------------------------------去重----------------------------------------------------
             middle_entity = list(set(middle_entity))
 
-            entity_list.append([i[0], ';'.join(middle_entity + tp_tr + tp_or + op_tr + op_or + book_name)])
+            total_entity = middle_entity + tp_tr + tp_or + op_tr + op_or + book_name + result_pre
+            entity_list.append([i[0], ';'.join(total_entity)])
 
         return entity_list
 
